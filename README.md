@@ -41,14 +41,14 @@ Interrupt (Button / Event) ---> ISR ---> Queue/Event Trigger
 
 ## Features
 - Multitasking with FreeRTOS
--   Seperate tasks for each sensor and processing logic
+  -   Seperate tasks for each sensor and processing logic
 - Sensor Integration
--   Light sensor (analog inputs)
--   Humidity sensor (digital input)
+  -   Light sensor (analog inputs)
+  -   Humidity sensor (digital input)
 - Inter-task communication
--   Queue-based data passing between tasks
+  -   Queue-based data passing between tasks
 - Interrupt Handling
--   Triggered by external input (e.g., button)
--   Sends signal to processing task
+  -   Triggered by external input (e.g., button)
+  -   Sends signal to processing task
 - Output
--   Logs data and system state via UART
+  -   Logs data and system state via UART

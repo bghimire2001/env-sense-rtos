@@ -1,0 +1,6 @@
+build/
+managed_components/
+dependencies.lock
+sdkconfig.old
+.DS_Store
+.claude/

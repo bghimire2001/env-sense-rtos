@@ -79,8 +79,38 @@ bus_err_t i2c_bus_probe(uint8_t addr){
     if (xSemaphoreTake(bus_lock, pdMS_TO_TICKS(I2C_BUS_TIMEOUT_MS)) != pdTRUE) {
         return BUS_ERR_TIMEOUT;
     }
+    i2c_master_dev_handle_t dev_handle;
     esp_err_t err = i2c_master_probe(bus_handle, addr, I2C_BUS_TIMEOUT_MS);
     xSemaphoreGive(bus_lock);
     ESP_LOGD(TAG, "probe 0x%02X -> %s", addr, esp_err_to_name(err));
     return esp_to_bus_err(err);
+}
+/*
+Write to i2c bus
+
+IN CONSTRUCTION
+args:
+- curr_device: device address and address width info.
+- data: data to write
+- loc: location on device to write to
+- data_size: size in bytes to write
+*/
+
+bus_err_t i2c_bus_write(const i2c_device_t* curr_device, const uint8_t* data, uint32_t loc, size_t data_size){
+    if(!initialized || !bus_lock){
+        return BUS_ERR_INVALID;
+    }
+    if (xSemaphoreTake(bus_lock, pdMS_TO_TICKS(I2C_BUS_TIMEOUT_MS)) != pdTRUE) {
+        return BUS_ERR_TIMEOUT;
+    }
+    i2c_device_config_t dev_cfg = {
+    .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+    .device_address = curr_device->address,
+    .scl_speed_hz = I2C_BUS_FREQ_HZ,
+    };
+    i2c_master_dev_handle_t dev_handle;
+    esp_err_t err_adddevice = i2c_master_bus_add_device(bus_handle, &dev_cfg, &dev_handle);
+    esp_err_t err_transmit = i2c_master_transmit(dev_handle, data, data_size*8, I2C_BUS_TIMEOUT_MS);
+    xSemaphoreGive(bus_lock);
+    return esp_to_bus_err(err_transmit);
 }

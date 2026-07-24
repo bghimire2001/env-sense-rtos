@@ -14,8 +14,9 @@ owned by the backend
 
 // Definition of an i2c devices
 typedef struct {
-    uint8_t address; /* 7 Bit Address of the i2c device */
-    uint8_t addresswidth; /* Width of it's address space in bytes */
+    uint8_t addr; /* i2c Address of the device */
+    uint8_t addr_bit; /* Width of it's i2c address 7 or 10 */
+    uint8_t loc_width; /*Width of the memory/address locations either 1 or 2 bytes*/
 } i2c_device_t;
 
 typedef enum {

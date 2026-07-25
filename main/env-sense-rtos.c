@@ -24,8 +24,26 @@ static void task_two(void *arg)
 
 void app_main(void)
 {
+    printf("HERE");
+    ESP_LOGI(TAG, "HERE");
     bus_err_t initerr = i2c_bus_init();
+    i2c_device_t bmp388 = {
+        .addr = 0x77,
+        .addr_bit = 7,
+        .loc_width = 2
+    };
     bus_err_t probeerr = i2c_bus_probe(0x77);
-    xTaskCreate(task_one, "task_one", 2048, NULL, 5, NULL);
-    xTaskCreate(task_two, "task_two", 2048, NULL, 5, NULL);
+    uint8_t bmpdata[3];
+    if(probeerr == BUS_OK){
+        ESP_LOGI(TAG, "BMP388 found");
+    } else{
+        ESP_LOGI(TAG, "BMP388 not found");
+    }
+    while(true){
+        i2c_bus_read(&bmp388, bmpdata, 7, 3);
+        ESP_LOGI(TAG, "%X", bmpdata);
+    }
+    
+    
+
 }

@@ -119,12 +119,14 @@ If takes too long to obtain lock, return BUS_ERR_TIMEOUT
 
 */
 bus_err_t i2c_bus_probe(uint8_t addr){
+    ESP_LOGD(TAG, "Before Lock");
     if(!initialized || !bus_lock){
         return BUS_ERR_INVALID;
     }
     if (xSemaphoreTake(bus_lock, pdMS_TO_TICKS(I2C_BUS_TIMEOUT_MS)) != pdTRUE) {
         return BUS_ERR_TIMEOUT;
     }
+    ESP_LOGD(TAG, "After Lock");
     esp_err_t err = i2c_master_probe(bus_handle, addr, I2C_BUS_TIMEOUT_MS);
     xSemaphoreGive(bus_lock);
     ESP_LOGD(TAG, "probe 0x%02X -> %s", addr, esp_err_to_name(err));

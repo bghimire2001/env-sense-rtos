@@ -52,3 +52,9 @@ Interrupt (Button / Event) ---> ISR ---> Queue/Event Trigger
   -   Sends signal to processing task
 - Output
   -   Logs data and system state via UART
+
+## Environment Set Up
+- Requires ESP-IDF set up
+  - source ~/esp/esp-idf/export.sh
+- Build, Flash, Monitor
+  - idf.py build flash monitor

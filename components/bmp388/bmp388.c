@@ -46,13 +46,29 @@ bmp388_err_t bmp388_init(bmp388_t *sensor, uint8_t addr){
     if(probeerr != BUS_OK){
         return BMP388_ERR_INVALID;
     }
+    
     /* Instantiate Device */
     i2c_device_t bmp388 = {
         .addr = addr,
         .addr_bit = 7,
-        .loc_width = 2
+        .loc_width = 1
     };
+    /* Validate Chip ID */
+    uint8_t chip_id = 0;
+    if (i2c_bus_read(&bmp388, &chip_id, BMP388_CHIP_ID_REG, 1) != BUS_OK){
+        return BMP388_ERR_BUS;
+    }   
+    if (chip_id != 0x50){
+        return BMP388_ERR_BAD_CHIP_ID;
+    }
+        
     sensor->dev = bmp388;
+
+    /* Get out of Sleep Mode and Enable Temp and Pressure Recording */
+    uint8_t pwr = BMP388_PWR_CTRL_NORMAL | BMP388_TEMP_ENABLE | BMP388_PRESSURE_ENABLE;
+    if (i2c_bus_write(&bmp388, &pwr, BMP388_PWR_CTRL, 1) != BUS_OK){
+        return BMP388_ERR_BUS;
+    }
 
     /* Configure Temp and Pressure Compensation Values*/
     uint8_t param_data[21];
@@ -91,7 +107,9 @@ bmp388_err_t bmp388_init(bmp388_t *sensor, uint8_t addr){
         .p10 = (float) par_p10 / BMP388_SCALE_P10,
         .p11 = (float) par_p11 / BMP388_SCALE_P11,
     };
-    return BMP388_ERR_INVALID;
+    sensor->calib = calib;
+    
+    return BMP388_OK;
 }
 
 bmp388_err_t bmp388_read(bmp388_t *sensor, bmp388_reading_t *out){

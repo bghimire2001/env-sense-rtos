@@ -1,6 +1,6 @@
 #include "bmp388.h"
 #include "bmp388_regs.h"
-static float compensate_temp(uint32_t raw, const bmp388_calib_t *cal, float *t_lin_out){
+static float compensate_temp(uint32_t raw, const bmp388_calib_t *cal){
     float partial_data1;
     float partial_data2;
 
@@ -8,11 +8,10 @@ static float compensate_temp(uint32_t raw, const bmp388_calib_t *cal, float *t_l
     partial_data2 = (float)(partial_data1 * (cal->t2));
 
     float t_lin = partial_data2 + (partial_data1 * partial_data1) * (cal->t3);
-    *t_lin_out = t_lin;
     return t_lin;
 
 }
-static float compensate_press(uint32_t raw, const bmp388_calib_t *cal){
+static float compensate_press(uint32_t raw, const bmp388_calib_t *cal, float t_lin){
     float comp_press;
     float partial_data1;
     float partial_data2;
@@ -21,20 +20,19 @@ static float compensate_press(uint32_t raw, const bmp388_calib_t *cal){
     float partial_out1;
     float partial_out2;
 
-    partial_data1 = (cal->p6) * (cal->t_lin);
-    partial_data2 = (cal->p7) * ((cal->t_lin)*(cal->t_lin));
-    partial_data3 = (cal->p8) * ((cal->t_lin)*(cal->t_lin)*(cal->t_lin));
+    partial_data1 = (cal->p6) * t_lin;
+    partial_data2 = (cal->p7) * (t_lin*t_lin);
+    partial_data3 = (cal->p8) * (t_lin*t_lin*t_lin);
     partial_out1 = (cal->p5) + partial_data1 + partial_data2 + partial_data3;
 
-    partial_data1 = (cal->p2) * (cal->t_lin);
-    partial_data2 = (cal->p3) * ((cal->t_lin)*(cal->t_lin));
-    partial_data3 = (cal->p4) * ((cal->t_lin)*(cal->t_lin)*(cal->t_lin));
+    partial_data1 = (cal->p2) * t_lin;
+    partial_data2 = (cal->p3) * (t_lin*t_lin);
+    partial_data3 = (cal->p4) * (t_lin*t_lin*t_lin);
     partial_out2 = (float)raw * ((cal->p1)+ partial_data1 + partial_data2 + partial_data3);
 
-    partial_out2 = (float)raw * ((cal->p1) + partial_data1 + partial_data2 + partial_data3);
 
     partial_data1 = (float)raw * (float)raw;
-    partial_data2 = (cal->p9) + (cal->p10)* (cal->t_lin);
+    partial_data2 = (cal->p9) + (cal->p10)* t_lin;
     partial_data3 = partial_data1 * partial_data2;
     partial_data4 = partial_data3 + ((float)raw * (float)raw * (float)raw) * (cal->p11);
     comp_press = partial_out1 + partial_out2 + partial_data4;
@@ -66,13 +64,13 @@ bmp388_err_t bmp388_init(bmp388_t *sensor, uint8_t addr){
 
     /* Get out of Sleep Mode and Enable Temp and Pressure Recording */
     uint8_t pwr = BMP388_PWR_CTRL_NORMAL | BMP388_TEMP_ENABLE | BMP388_PRESSURE_ENABLE;
-    if (i2c_bus_write(&bmp388, &pwr, BMP388_PWR_CTRL, 1) != BUS_OK){
+    if (i2c_bus_write(&sensor->dev, &pwr, BMP388_PWR_CTRL, 1) != BUS_OK){
         return BMP388_ERR_BUS;
     }
 
     /* Configure Temp and Pressure Compensation Values*/
     uint8_t param_data[21];
-    bus_err_t err = i2c_bus_read(&bmp388, param_data, BMP388_CALIB_DATA, BMP388_CALIB_LEN);
+    bus_err_t err = i2c_bus_read(&sensor->dev, param_data, BMP388_CALIB_DATA, BMP388_CALIB_LEN);
     if(err != BUS_OK){
         return BMP388_ERR_BUS;
     }
@@ -113,5 +111,27 @@ bmp388_err_t bmp388_init(bmp388_t *sensor, uint8_t addr){
 }
 
 bmp388_err_t bmp388_read(bmp388_t *sensor, bmp388_reading_t *out){
-    return BMP388_ERR_INVALID;
+    /* Return invalid if device or calibration is not initialized. */
+    if (!sensor){
+        return BMP388_ERR_INVALID;
+    }
+    uint8_t temp_pres_data[6];
+    bus_err_t err = i2c_bus_read(&sensor->dev, temp_pres_data, BMP388_PRESSURE_DATA_0, BMP388_DATA_LEN);
+    if(err != BUS_OK){
+        return BMP388_ERR_BUS;
+    }
+    uint32_t raw_temp = (uint32_t)((uint32_t)temp_pres_data[3] | (uint32_t)temp_pres_data[4] << 8  | (uint32_t)temp_pres_data[5] << 16 );
+    uint32_t raw_pres = (uint32_t)((uint32_t)temp_pres_data[0] | (uint32_t)temp_pres_data[1] << 8  | (uint32_t)temp_pres_data[2] << 16 );
+    
+    float temp_final = compensate_temp(raw_temp, &sensor->calib);
+    float pres_final = compensate_press(raw_pres, &sensor->calib, temp_final);
+
+    bmp388_reading_t reading = {
+        .temperature_c = temp_final,
+        .pressure_pa = pres_final
+
+    };
+    *out = reading;
+
+    return BMP388_OK;
 }

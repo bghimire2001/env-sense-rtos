@@ -1,6 +1,7 @@
 /* Register Addresses */
 
 #define BMP388_PWR_CTRL 0x1B
+#define BMP388_DATA_LEN 6
 #define BMP388_PRESSURE_DATA_0 0x04
 #define BMP388_PRESSURE_DATA_1 0x05
 #define BMP388_PRESSURE_DATA_2 0x06

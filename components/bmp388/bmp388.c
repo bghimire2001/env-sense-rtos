@@ -1,5 +1,9 @@
 #include "bmp388.h"
 #include "bmp388_regs.h"
+#include <stdio.h>
+
+static const char *TAG = "bmp388";
+
 static float compensate_temp(uint32_t raw, const bmp388_calib_t *cal){
     float partial_data1;
     float partial_data2;
@@ -123,7 +127,14 @@ bmp388_err_t bmp388_read(bmp388_t *sensor, bmp388_reading_t *out){
     uint32_t raw_temp = (uint32_t)((uint32_t)temp_pres_data[3] | (uint32_t)temp_pres_data[4] << 8  | (uint32_t)temp_pres_data[5] << 16 );
     uint32_t raw_pres = (uint32_t)((uint32_t)temp_pres_data[0] | (uint32_t)temp_pres_data[1] << 8  | (uint32_t)temp_pres_data[2] << 16 );
     
+    
+    
     float temp_final = compensate_temp(raw_temp, &sensor->calib);
+    bmp388_t s = *sensor;
+    // printf("calib t=%.10e,%.10e,%.10e p=%.10e,%.10e,%.10e,%.10e,%.10e,%.10e,%.10e,%.10e,%.10e,%.10e,%.10e",
+    // s.calib.t1, s.calib.t2, s.calib.t3, s.calib.p1, s.calib.p2, s.calib.p3,
+    // s.calib.p4, s.calib.p5, s.calib.p6, s.calib.p7, s.calib.p8, s.calib.p9,
+    // s.calib.p10, s.calib.p11);
     float pres_final = compensate_press(raw_pres, &sensor->calib, temp_final);
 
     bmp388_reading_t reading = {
@@ -131,6 +142,9 @@ bmp388_err_t bmp388_read(bmp388_t *sensor, bmp388_reading_t *out){
         .pressure_pa = pres_final
 
     };
+    // printf("raw_t=0x%06lX raw_p=0x%06lX  ->  %.2f C  %.1f Pa\n",
+    //      (unsigned long)raw_temp, (unsigned long)raw_pres,
+    //      reading.temperature_c, reading.pressure_pa);
     *out = reading;
 
     return BMP388_OK;

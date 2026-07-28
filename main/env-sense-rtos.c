@@ -45,13 +45,15 @@ void app_main(void)
         ESP_LOGI(TAG, "BMP388 not found");
     }
     bmp388_init(&currsens, bmp388.addr);
+    
     bmp388_reading_t reading;
     while(true){
         // i2c_bus_read(&bmp388, bmpdata, 7, 3);
         bmp388_read(&currsens, &reading);
+
         ESP_LOGI(TAG, "%f", reading.temperature_c);
         ESP_LOGI(TAG, "%f", reading.pressure_pa);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
     
     

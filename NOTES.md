@@ -9,4 +9,6 @@
 - Init is required to be ran before anything else. The init will create the Mutex but not take it.
     - We assume that no tasks are running at this point.
 
+- Use %e to show extremely small or large numbers. 
+
 

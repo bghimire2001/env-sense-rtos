@@ -12,7 +12,7 @@ Core Embedded Systems concepts include:
 Designed to simulate a scalable embedded monitoring node, where multiple inputs are processed concurrently and reliably.
 
                 +----------------------+
-                |     Humidity Task    |
+                |  Humidity/Temp Task  |
                 +----------+-----------+
                            |
                            v

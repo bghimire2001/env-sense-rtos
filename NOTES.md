@@ -11,4 +11,12 @@
 
 - Use %e to show extremely small or large numbers. 
 
+#### Next Tasks
+
+- SPI driver
+- Control some form of equipment
+- Add more i2c devices
+- Write more tests
+- Communicate over bluetooth or wifi
+
 

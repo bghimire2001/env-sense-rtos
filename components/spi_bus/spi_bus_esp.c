@@ -1,4 +1,12 @@
 #include "spi_bus.h"
+#include "driver/spi_master.h"
+
+#define SPI_BUS_SCLK 12
+#define SPI_BUS_MISO_GPIO 13
+#define SPI_BUS_MOSI_GPIO 11
+#define SPI_CS1 10
+#define SPI_BUS_CLK_FRQ_HZ 4000000
+
 
 spi_err_t spi_bus_init(void){
     return BUS_ERR_INVALID;

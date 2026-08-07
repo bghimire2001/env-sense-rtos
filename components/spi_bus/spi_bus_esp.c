@@ -19,6 +19,8 @@
 static SemaphoreHandle_t bus_lock = NULL;
 static bool initialized = false;
 
+static spi_host_device_t bus_handle;
+
 static struct {
     spi_device_handle_t handle;
     uint8_t cs;
@@ -54,6 +56,15 @@ spi_err_t spi_bus_init(void){
     }
 
     /* SPI Config */
+    spi_bus_config_t buscfg = {
+    .mosi_io_num = SPI_BUS_MOSI_GPIO,
+    .miso_io_num = SPI_BUS_MISO_GPIO,
+    .sclk_io_num = SPI_BUS_SCLK,
+    .quadwp_io_num = -1,
+    .quadhd_io_num = -1,
+    .max_transfer_sz = 4096,
+    };
+    spi_bus_initialize(bus_handle, &buscfg, SPI_DMA_DISABLED);
 
     if(err != ESP_OK){
         vSemaphoreDelete(bus_lock);

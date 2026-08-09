@@ -14,6 +14,7 @@
 
 
 #define SPI_BUS_CLK_FRQ_HZ 4000000
+#define SPI_BUS_MODE 0
 #define SPI_BUS_TIMEOUT_MS 100
 
 static SemaphoreHandle_t bus_lock = NULL;
@@ -72,6 +73,19 @@ spi_err_t spi_bus_init(void){
         return esp_to_bus_err(err);
     }
     return BUS_ERR_INVALID;
+}
+
+
+/* Register SPI device to SPI bus. Configure CS, mode, freq, etc.. */
+spi_err_t spi_device_register(){
+        spi_device_interface_config_t devcfg = {
+        .clock_speed_hz = SPI_BUS_CLK_FRQ_HZ
+        .mode = SPI_BUS_MODE,                          // SPI mode 0
+        .spics_io_num = 15,                 // CS pin for this device
+        .queue_size = 7                     // Transaction queue depth
+    };
+
+    spi_bus_add_device(my_spi_host, &devcfg, &my_spi_device);
 }
 
 spi_err_t spi_device_probe(uint8_t cs){

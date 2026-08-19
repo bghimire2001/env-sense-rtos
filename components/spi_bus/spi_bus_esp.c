@@ -102,7 +102,7 @@ spi_err_t spi_device_probe(uint8_t cs){
 
 spi_err_t spi_device_read(const spi_device_t* curr_device, const uint8_t* data, uint32_t loc, size_t data_size){
     /*Set up Buffer*/
-
+    uint8_t buf[data_size];
     /* Take Lock */
     if (xSemaphoreTake(bus_lock, pdMS_TO_TICKS(SPI_BUS_TIMEOUT_MS)) != pdTRUE) {
         return BUS_ERR_TIMEOUT;
@@ -118,6 +118,10 @@ spi_err_t spi_device_read(const spi_device_t* curr_device, const uint8_t* data, 
 
 spi_err_t spi_device_write(const spi_device_t* curr_device, const uint8_t* data, uint32_t loc, size_t data_size){
     /*Set up Buffer*/
+    uint8_t buf[data_size];
+    for(int i = 0; i < data_size; i++){
+        buf[i] = data[i];
+    }
 
     /* Take Lock */
     if (xSemaphoreTake(bus_lock, pdMS_TO_TICKS(SPI_BUS_TIMEOUT_MS)) != pdTRUE) {
